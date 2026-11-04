@@ -1,0 +1,28 @@
+module IntercomBulkCleaner
+	module Repositories
+		class ExportRepository
+			attr_reader :path
+			
+			HEADERS = %w[id external_id role email].freeze
+
+			def initialize(path)
+				@path = path
+			end
+
+			def save(users)
+				FileUtils.mkdir_p(File.dirname(@path))
+				CSV.open(@path, "w") do |csv|
+					csv << HEADERS
+					users.each do |user|
+						csv << HEADERS.map { |header| user[header.to_sym] }
+					end
+				end
+			end
+
+			def load
+				raise ValidationError, "CSV file not found: #{@path}" unless File.file?(@path)
+				CSV.read(@path, headers: true)
+			end
+		end
+	end
+end
