@@ -1,4 +1,5 @@
 module IntercomBulkCleaner
+	# Settings from .env: token, batch size, file paths.
 	class Configuration
 		attr_reader :access_token, :base_url, :api_version, :test_count,
 		            :batch_size, :job_timeout, :job_poll_interval,

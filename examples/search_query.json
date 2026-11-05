@@ -1,0 +1,16 @@
+{
+  "query": {
+    "operator": "AND",
+    "value": [
+      {
+        "operator": "OR",
+        "value": [
+          { "field": "email_domain", "operator": "=", "value": "gmail.com" },
+          { "field": "email_domain", "operator": "=", "value": "yahoo.com" }
+        ]
+      },
+      { "field": "created_at", "operator": ">", "value": 1767268800 },
+      { "field": "unsubscribed_from_emails", "operator": "=", "value": false }
+    ]
+  }
+}

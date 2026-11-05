@@ -1,5 +1,6 @@
 module IntercomBulkCleaner
 	module Services
+		# Waits for an Intercom bulk job to finish.
 		class JobWaiter
 			def initialize(jobs_api, timeout:, poll_interval:)
 				@jobs_api = jobs_api
@@ -7,7 +8,8 @@ module IntercomBulkCleaner
 				@poll_interval = poll_interval
 			end
 
-			def call(job_id)
+			# Poll until done. Pass a block to get each state.
+			def call(job_id, &on_state)
 				started_at = Time.now
 
 				loop do
@@ -19,7 +21,7 @@ module IntercomBulkCleaner
 					response = @jobs_api.find(job_id)
 					state = response.fetch("state")
 
-					puts "Job #{job_id}: #{state}"
+					on_state ? on_state.call(state) : puts("Job #{job_id}: #{state}")
 
 					case state
 					when "pending", "running"

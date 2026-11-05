@@ -1,32 +1,34 @@
 module IntercomBulkCleaner
 	module Services
+		# Checks deleted contacts are really gone.
 		class DeletionVerifier
 			def initialize(contacts_api)
 				@contacts_api = contacts_api
 			end
 
-			def call(ids)
+			# Returns IDs that still exist (no 404).
+			def check(ids)
 				remaining = []
-				deleted = 0
-
-				puts "Verifying deletion of #{ids.size} contacts..."
 
 				ids.each_with_index do |id, index|
 					begin
 						@contacts_api.find(id)
 						remaining << id
 					rescue APIError => error
-						if error.status == 404
-							deleted += 1
-						else
-							raise
-						end
+						raise unless error.status == 404
 					end
 
-					puts "Verified #{index + 1}/#{ids.size}" if (index + 1) % 10 == 0
+					yield index + 1, ids.size if block_given?
 				end
 
-				puts "Deleted: #{deleted}; still existing: #{remaining.size}"
+				remaining
+			end
+
+			# CLI version: prints results, fails if any remain.
+			def call(ids)
+				puts "Verifying deletion of #{ids.size} contacts..."
+				remaining = check(ids) { |done, total| puts "Verified #{done}/#{total}" if (done % 10).zero? }
+				puts "Deleted: #{ids.size - remaining.size}; still existing: #{remaining.size}"
 
 				unless remaining.empty?
 					warn "Contacts still present: #{remaining.join(', ')}"

@@ -1,53 +1,50 @@
 module IntercomBulkCleaner
 	module Validators
+		# Checks a deletion file before anything is deleted.
 		class DeletionValidator
-			def initialize(expected_count:)
-				@expected_count = expected_count
-			end
+			ID_PATTERN = /\A[A-Za-z0-9_-]+\z/.freeze
 
-			def validate!(rows, expected_prefix:)
-				raise ValidationError, "CSV must contain a header row." unless rows.headers
-
-				missing = Repositories::ExportRepository::HEADERS - rows.headers
-				unless missing.empty?
-					raise ValidationError, "Missing CSV columns: #{missing.join(', ')}"
-				end
-
-				# Test purposes only
-				# unless rows.size == @expected_count
-				# 	raise ValidationError,
-				# 	      "Expected exactly #{@expected_count} contacts, found #{rows.size}."
-				# end
-
+			# Returns unique IDs. Rejects missing IDs and emails.
+			# Test runs: every contact must belong to that run.
+			def validate!(records, expected_prefix: nil)
 				ids = []
-				external_ids = []
 
-				rows.each do |row|
-					id = row["id"]
-					external_id = row["external_id"]
+				records.each_with_index do |record, index|
+					id = record["id"]
+					line = "entry #{index + 1}"
 
-					if id.nil? || id.empty? || external_id.nil? || external_id.empty?
-						raise ValidationError, "Missing contact ID or external ID."
+					raise ValidationError, "Missing contact ID in #{line}." if id.nil? || id.empty?
+
+					if id.include?("@")
+						raise ValidationError, "#{line}: #{id.inspect} looks like an email. delete needs Intercom contact IDs."
 					end
+					raise ValidationError, "#{line}: invalid contact ID #{id.inspect}." unless id.match?(ID_PATTERN)
 
-					unless external_id.start_with?("#{expected_prefix}-")
-						raise ValidationError,
-						      "Safety check failed: contact outside this test run."
-					end
-
-					unless row["role"] == "user"
-						raise ValidationError, "Unexpected contact role: #{row['role']}"
-					end
+					check_test_run!(record, line, expected_prefix) if expected_prefix
 
 					ids << id
-					external_ids << external_id
 				end
 
-				raise ValidationError, "Duplicate contact IDs detected." unless ids.uniq.size == @expected_count
+				if expected_prefix
+					external_ids = records.map { |record| record["external_id"] }
+					raise ValidationError, "Duplicate external IDs detected." unless external_ids.uniq.size == external_ids.size
+				end
 
-				raise ValidationError, "Duplicate external IDs detected." unless external_ids.uniq.size == @expected_count
+				ids.uniq
+			end
 
-				ids
+			private
+
+			# Must be a user from this test run.
+			def check_test_run!(record, line, prefix)
+				external_id = record["external_id"].to_s
+				unless external_id.start_with?("#{prefix}-")
+					raise ValidationError, "Safety check failed: #{line} is outside test run #{prefix}."
+				end
+
+				return if record["role"] == "user"
+
+				raise ValidationError, "Safety check failed: #{line} has role #{record['role'].inspect}, expected user."
 			end
 		end
 	end

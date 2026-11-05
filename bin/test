@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+# Runs the offline test suite. No Intercom token or network needed.
+Dir[File.expand_path("../test/*_test.rb", __dir__)].sort.each { |file| require file }

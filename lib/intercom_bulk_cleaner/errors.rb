@@ -1,4 +1,5 @@
 module IntercomBulkCleaner
+	# Base error. Shown to the user as a short message.
 	class Error < StandardError; end
 
 	class ConfigurationError < Error; end
@@ -7,6 +8,7 @@ module IntercomBulkCleaner
 
 	class JobError < Error; end
 
+	# Intercom answered with an error status.
 	class APIError < Error
 		attr_reader :status, :body
 

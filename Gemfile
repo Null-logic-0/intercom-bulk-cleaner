@@ -3,3 +3,7 @@
 source "https://rubygems.org"
 gem "dotenv"
 # gem "rails"
+
+group :test do
+  gem "minitest"
+end

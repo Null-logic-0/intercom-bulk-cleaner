@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# Try the whole app with fake data. Nothing is sent to Intercom.
+# Files go to tmp/demo/ (exports, logs).
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+require "intercom_bulk_cleaner"
+require_relative "../test/support/fake_intercom"
+
+include IntercomBulkCleaner
+
+dir = "tmp/demo"
+FileUtils.mkdir_p(%W[#{dir}/exports #{dir}/logs])
+
+api = FakeIntercom::API.new(FakeIntercom.sample_contacts, latency: 0.15)
+waiter = Services::JobWaiter.new(FakeIntercom::Jobs.new, timeout: 30, poll_interval: 0.3)
+runs = Repositories::RunRepository.new("#{dir}/test_run_id.txt")
+test_export = Repositories::ExportRepository.new("#{dir}/test_run.csv")
+verifier = Services::DeletionVerifier.new(api)
+searcher = Services::ContactSearch.new(api)
+
+App.new(
+	ui: UI::Terminal.new,
+	query_builder: Search::QueryBuilder.new,
+	searcher: searcher,
+	deleter: Services::ContactDeleter.new(
+		api, waiter, runs, Validators::DeletionValidator.new, verifier,
+		batch_size: 100, default_test_file: test_export.path, log_dir: "#{dir}/logs"
+	),
+	verifier: verifier,
+	creator: Services::TestContactCreator.new(api, waiter, runs, count: 20),
+	test_exporter: Services::ContactExporter.new(api, runs, test_export),
+	whoami: -> { { name: "DEMO (fake data)", email: "nothing is sent to Intercom" } },
+	exports_dir: "#{dir}/exports",
+	logs_dir: "#{dir}/logs"
+).run

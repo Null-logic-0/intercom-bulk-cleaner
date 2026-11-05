@@ -5,8 +5,15 @@
 
 # Exports
 exports/*.csv
+exports/*.json
+exports/*.jsonl
+exports/*_not_found.txt
+exports/*.partial.jsonl
 exports/test_run_id.txt
 !exports/.gitkeep
+
+# Demo output
+tmp/
 
 # Logs
 logs/*

@@ -1,5 +1,6 @@
 module IntercomBulkCleaner
 	module Repositories
+		# Test tools: remembers the last create-test run.
 		class RunRepository
 			PREFIX = "bulk-cleaner-test-"
 
@@ -7,6 +8,7 @@ module IntercomBulkCleaner
 				@path = path
 			end
 
+			# Store the run ID.
 			def save(prefix)
 				raise ValidationError, "Invalid test run prefix." unless prefix.start_with?(PREFIX)
 
@@ -14,6 +16,7 @@ module IntercomBulkCleaner
 				File.write(@path, prefix)
 			end
 
+			# Read the run ID. Fails if there is none.
 			def load
 				raise ValidationError, "No test run found. Run create-test first." unless File.file?(@path)
 

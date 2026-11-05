@@ -1,5 +1,6 @@
 module IntercomBulkCleaner
 	module Repositories
+		# Test tools: CSV of test-run contacts.
 		class ExportRepository
 			attr_reader :path
 			

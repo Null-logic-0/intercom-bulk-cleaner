@@ -2,6 +2,11 @@ GEM
   remote: https://rubygems.org/
   specs:
     dotenv (3.2.0)
+    drb (2.2.3)
+    minitest (6.0.6)
+      drb (~> 2.0)
+      prism (~> 1.5)
+    prism (1.9.0)
 
 PLATFORMS
   arm64-darwin-25
@@ -9,10 +14,14 @@ PLATFORMS
 
 DEPENDENCIES
   dotenv
+  minitest
 
 CHECKSUMS
   bundler (4.0.23) sha256=407ba8a1d928f412847f819aa5f8b6aef7c59fb51feb517112af8a165487287b
   dotenv (3.2.0) sha256=e375b83121ea7ca4ce20f214740076129ab8514cd81378161f11c03853fe619d
+  drb (2.2.3)
+  minitest (6.0.6)
+  prism (1.9.0)
 
 BUNDLED WITH
   4.0.23

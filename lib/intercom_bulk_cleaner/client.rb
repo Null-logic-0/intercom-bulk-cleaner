@@ -1,4 +1,5 @@
 module IntercomBulkCleaner
+	# Talks to the Intercom API. Retries when rate limited.
 	class Client
 		MAX_RETRIES = 6
 
@@ -10,13 +11,14 @@ module IntercomBulkCleaner
 			request(:get, path, params: params)
 		end
 
-		def post(path, body = {})
-			request(:post, path, body: body)
+		def post(path, body = {}, idempotent: false)
+			request(:post, path, body: body, idempotent: idempotent)
 		end
 
 		private
 
-		def request(method, path, params: {}, body: nil)
+		# Send a request. Retries only when it's safe.
+		def request(method, path, params: {}, body: nil, idempotent: false)
 			uri = URI.join(
 				ensure_trailing_slash(@configuration.base_url),
 				path.sub(%r{\A/}, "")
@@ -56,9 +58,9 @@ module IntercomBulkCleaner
 
 				JSON.parse(response.body)
 			rescue APIError => error
-				# A 5xx error doesn't mean the request failed.
-				# Retrying could create duplicate contacts or jobs.
-				retryable = error.status == 429 || (method == :get && error.status >= 500)
+				# Retry 429 always. Retry 5xx only for safe requests:
+				# a failed POST may have worked, so retrying could duplicate.
+				retryable = error.status == 429 || ((method == :get || idempotent) && error.status >= 500)
 				retries += 1
 				raise unless retryable && retries <= MAX_RETRIES
 
@@ -68,9 +70,8 @@ module IntercomBulkCleaner
 				retry
 			rescue Net::OpenTimeout, Net::ReadTimeout, SocketError, EOFError,
 				IOError, SystemCallError => error
-				# A network error doesn't mean Intercom rejected the request.
-				# Retrying could create duplicates.
-				raise if method == :post
+				# Network error: retry safe requests only, same reason.
+				raise if method == :post && !idempotent
 
 				retries += 1
 				raise if retries > MAX_RETRIES
@@ -82,6 +83,7 @@ module IntercomBulkCleaner
 			end
 		end
 
+		# Wait: Retry-After header, else 2, 4, 8... seconds (max 60).
 		def retry_delay(response, retries)
 			retry_after = response && response["Retry-After"]
 			parsed = Integer(retry_after, exception: false)
