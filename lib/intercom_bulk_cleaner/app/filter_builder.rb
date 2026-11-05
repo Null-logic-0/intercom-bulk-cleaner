@@ -1,33 +1,7 @@
 module IntercomBulkCleaner
 	class App
-		# Build filters: field -> condition -> value.
+		# Build filters
 		module FilterBuilder
-			# Fields in the picker, grouped.
-			FIELD_GROUPS = {
-				"identity" => %w[email name email_domain external_id id phone role],
-				"activity" => %w[
-					created_at signed_up_at last_seen_at last_contacted_at last_replied_at updated_at
-					last_email_opened_at last_email_clicked_at
-				],
-				"email status" => %w[unsubscribed_from_emails has_hard_bounced marked_email_as_spam],
-				"organisation" => %w[tag_id segment_id owner_id],
-				"location & device" => %w[location.country location.region location.city browser browser_language os language_override]
-			}.freeze
-
-			TYPE_NAMES = {
-				string: "text", integer: "number", boolean: "true/false", date: "date", tag: "tag ID", custom: "custom"
-			}.freeze
-
-			# Operators in plain words.
-			OPERATOR_LABELS = {
-				"=" => "is", "!=" => "is not", "IN" => "is any of", "NIN" => "is none of",
-				"~" => "contains", "!~" => "does not contain", "^" => "starts with", "$" => "ends with",
-				"<" => "is less than", ">" => "is greater than", "<=" => "is at most", ">=" => "is at least"
-			}.freeze
-
-			# Date operators in plain words.
-			DATE_LABELS = { "=" => "on", "<" => "before", ">" => "after" }.freeze
-
 			private
 
 			# Ask for filters until Continue. nil = back to menu.
@@ -61,10 +35,9 @@ module IntercomBulkCleaner
 			def ask_filter
 				field = choose_field
 				type = @query_builder.field_type(field)
-				labels = type == :date ? DATE_LABELS : OPERATOR_LABELS
 				operator = @ui.select(
 					field.to_s,
-					@query_builder.operators_for(field).map { |op| [labels.fetch(op), op, op] }
+					@query_builder.operators_for(field).map { |op| [Search::Labels.operator(op, date: type == :date), op, op] }
 				)
 
 				validator = lambda do |answer|
@@ -80,8 +53,8 @@ module IntercomBulkCleaner
 
 			# Pick a field. Type to search.
 			def choose_field
-				choices = FIELD_GROUPS.flat_map do |group, fields|
-					fields.map { |field| [field, field, "#{group} · #{TYPE_NAMES.fetch(@query_builder.field_type(field))}"] }
+				choices = Search::Labels::FIELD_GROUPS.flat_map do |group, fields|
+					fields.map { |field| [field, field, "#{group} · #{Search::Labels.type_name(@query_builder.field_type(field))}"] }
 				end
 				choices << ["custom attribute...", :custom, "custom_attributes.<name>"]
 
@@ -107,8 +80,8 @@ module IntercomBulkCleaner
 			# "email ~ x" -> "email contains x"
 			def describe_filter(filter)
 				field, operator, value = filter.split(/\s+/, 3)
-				labels = @query_builder.field_type(field) == :date ? DATE_LABELS : OPERATOR_LABELS
-				"#{@ui.paint(field, :bold)} #{labels.fetch(operator, operator)} #{@ui.paint(value, :cyan)}"
+				words = Search::Labels.operator(operator, date: @query_builder.field_type(field) == :date)
+				"#{@ui.paint(field, :bold)} #{words} #{@ui.paint(value, :cyan)}"
 			end
 
 			# AND or OR.

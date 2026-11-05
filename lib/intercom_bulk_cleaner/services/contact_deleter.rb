@@ -1,7 +1,6 @@
 module IntercomBulkCleaner
 	module Services
 		# Deletes the contacts listed in a file.
-		# plan = check the file, execute = delete, call = CLI flow.
 		class ContactDeleter
 			PREVIEW_ROWS = 5
 

@@ -71,7 +71,7 @@ class AppTest < Minitest::Test
 		path = File.join(@exports, "search.csv")
 		contains = choice(@query_builder.operators_for("email"), "~")
 		before = choice(@query_builder.operators_for("created_at"), "<")
-		created_at = choice(App::FIELD_GROUPS.values.flatten, "created_at")
+		created_at = choice(Search::Labels::FIELD_GROUPS.values.flatten, "created_at")
 
 		app([
 			"1", contains, "acme",           # email contains acme

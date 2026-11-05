@@ -85,7 +85,7 @@ module IntercomBulkCleaner
 				File.foreach(path) { |line| yield JSON.parse(line) }
 			end
 
-			# Temp file -> JSON array.
+			# Temp file to JSON array.
 			def write_json(partial_path, output)
 				File.open(output, "w") do |file|
 					file.write("[\n")
@@ -99,7 +99,7 @@ module IntercomBulkCleaner
 				end
 			end
 
-			# Temp file -> CSV. First pass finds all columns.
+			# Temp file to CSV. First pass finds all columns.
 			def write_csv(partial_path, output, columns:, all_columns:, iso_dates:)
 				flattener = ContactFlattener.new(iso_dates: iso_dates)
 

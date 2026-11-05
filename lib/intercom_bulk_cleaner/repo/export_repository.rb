@@ -3,8 +3,9 @@ module IntercomBulkCleaner
 		# Test tools: CSV of test-run contacts.
 		class ExportRepository
 			attr_reader :path
-			
-			HEADERS = %w[id external_id role email].freeze
+
+			# Same columns delete reads.
+			HEADERS = DeletionFile::FIELDS
 
 			def initialize(path)
 				@path = path

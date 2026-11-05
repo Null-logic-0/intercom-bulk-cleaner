@@ -33,7 +33,7 @@ module IntercomBulkCleaner
 			GROUP_OPERATORS = %w[AND OR].freeze
 			ROLES = %w[user lead].freeze
 
-			# Filters -> query. Needs a filter or a role.
+			# Needs a filter or a role.
 			def build(filters:, match: "all", role: "user")
 				query = build_base(filters: filters, match: match, role: role)
 				raise ValidationError, "Add at least one filter, or use --role user|lead." if query.nil?

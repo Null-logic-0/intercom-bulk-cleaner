@@ -7,8 +7,9 @@ module IntercomBulkCleaner
 			@configuration = configuration
 		end
 
-		def get(path, params = {})
-			request(:get, path, params: params)
+		# max_retries: 0 for quick checks that shouldn't wait.
+		def get(path, params = {}, max_retries: MAX_RETRIES)
+			request(:get, path, params: params, max_retries: max_retries)
 		end
 
 		def post(path, body = {}, idempotent: false)
@@ -18,7 +19,7 @@ module IntercomBulkCleaner
 		private
 
 		# Send a request. Retries only when it's safe.
-		def request(method, path, params: {}, body: nil, idempotent: false)
+		def request(method, path, params: {}, body: nil, idempotent: false, max_retries: MAX_RETRIES)
 			uri = URI.join(
 				ensure_trailing_slash(@configuration.base_url),
 				path.sub(%r{\A/}, "")
@@ -62,7 +63,7 @@ module IntercomBulkCleaner
 				# a failed POST may have worked, so retrying could duplicate.
 				retryable = error.status == 429 || ((method == :get || idempotent) && error.status >= 500)
 				retries += 1
-				raise unless retryable && retries <= MAX_RETRIES
+				raise unless retryable && retries <= max_retries
 
 				delay = retry_delay(response, retries)
 				warn "#{error.message}; retrying in #{delay}s"
@@ -74,7 +75,7 @@ module IntercomBulkCleaner
 				raise if method == :post && !idempotent
 
 				retries += 1
-				raise if retries > MAX_RETRIES
+				raise if retries > max_retries
 
 				delay = [2 ** retries, 60].min
 				warn "Network error: #{error.message}; retrying in #{delay}s"

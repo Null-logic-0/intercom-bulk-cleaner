@@ -1,7 +1,6 @@
 module IntercomBulkCleaner
 	module Search
 		# A list of values (usually emails) to look up in bulk.
-
 		# A list of emails (or IDs) to look up at once.
 		class BulkValues
 			FIELDS = %w[email id external_id phone name email_domain].freeze

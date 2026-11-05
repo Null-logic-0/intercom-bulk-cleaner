@@ -90,7 +90,7 @@ module IntercomBulkCleaner
 			info = @ui.spinner("Connecting to Intercom") { @whoami.call }
 			@workspace_name = info[:name]
 			"Workspace: #{@ui.paint(info[:name] || 'unknown', :bold)}#{info[:email] ? @ui.paint("  ·  #{info[:email]}", :gray) : ''}"
-		rescue Error, SocketError, SystemCallError => error
+		rescue StandardError => error # any failure here just means "not connected"
 			@ui.paint("Not connected: #{error.message[0, 60]}", :red)
 		end
 

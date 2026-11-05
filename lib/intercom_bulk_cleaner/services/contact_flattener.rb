@@ -2,7 +2,7 @@ module IntercomBulkCleaner
 	module Services
 		# Turns a nested Intercom contact object into a flat row for CSV.
 		
-		# Nested contact -> flat CSV row.
+		# flat CSV row.
 		class ContactFlattener
 			DEFAULT_COLUMNS = %w[
 				id external_id role email name phone email_domain email_verified owner_id
