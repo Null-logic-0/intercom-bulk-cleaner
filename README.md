@@ -163,3 +163,12 @@ bin/intercom-cleaner create-test         # creates TEST_CONTACT_COUNT fake users
 bin/intercom-cleaner export              # exports only those fake users
 bin/intercom-cleaner delete --test-run   # refuses anything that isn't from that test run
 ```
+
+## License
+
+Copyright (C) 2026 Luka Tchelidze
+
+Licensed under the [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later).
+
+You can use, change and share this tool. If you share a changed version, it must
+also be GPL and come with its source code. There's no warranty.
